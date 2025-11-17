@@ -6,7 +6,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph.message import add_messages
 from dotenv import load_dotenv
 import os
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 
 # Load variables from .env into environment variables
 load_dotenv()
