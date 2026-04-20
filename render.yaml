@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: neurobot-ai
+    env: docker
+    plan: free # Change to pro if needed
+    region: oregon # or your preferred region
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false # User will need to set this in Render UI
+      - key: LANGSMITH_API_KEY
+        sync: false
+      - key: LANGCHAIN_TRACING_V2
+        value: "true"
+      - key: LANGCHAIN_PROJECT
+        value: "NeuroBot-Pro"
+    autoDeploy: true

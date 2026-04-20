@@ -7,6 +7,8 @@ __pycache__/
 *.pyd
 *.so
 *.db
+*.db-shm
+*.db-wal
 *.sqlite3
 *.log
 *.pid
@@ -83,6 +85,7 @@ index.faiss
 *.pem
 *.json
 *.yaml
+!render.yaml
 *.yml
 *.env
 .env.local
