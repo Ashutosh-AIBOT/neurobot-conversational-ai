@@ -16,26 +16,42 @@ if "app_initialized" not in st.session_state:
 # --- CONFIG ---
 st.set_page_config(page_title="NeuroBot AI v2", page_icon="🤖", layout="wide")
 
-# Custom CSS for Premium Dashboard Look (Grey/Sleek)
+# Custom CSS for Premium Dashboard Look (Pure Black / OLED)
 st.markdown("""
     <style>
-    .stApp { background: #1a1a1a; color: #e5e5e5; }
-    .stSidebar { background-color: rgba(30, 30, 30, 0.95) !important; border-right: 1px solid #404040; }
+    /* Pure Black Background */
+    .stApp { background: #000000 !important; color: #ffffff !important; }
+    .stSidebar { background-color: #0a0a0a !important; border-right: 1px solid #1f1f1f; }
     
-    /* Stats Dashboard Styling */
+    /* Stats Dashboard Styling (Bronze/Gold accents) */
     .stats-card {
-        background: #2d2d2d;
-        border: 1px solid #525252;
+        background: #111111;
+        border: 1px solid #c5a059;
         border-radius: 12px;
         padding: 18px;
         margin: 12px 0;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
-    .metric-value { color: #d4d4d4; font-size: 1.6rem; font-weight: 800; }
-    .metric-label { color: #a3a3a3; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .metric-value { color: #c5a059; font-size: 1.6rem; font-weight: 900; }
+    .metric-label { color: #888888; font-size: 0.8rem; text-transform: uppercase; }
     
-    /* Message bubbles */
-    .stChatMessage { border-radius: 12px; margin-bottom: 15px; border: 1px solid #333; }
+    /* Message bubbles - Clearly Visible */
+    .stChatMessage { 
+        background: #111111 !important; 
+        border: 1px solid #222 !important; 
+        border-radius: 12px !important; 
+        padding: 15px !important;
+        margin-bottom: 20px !important;
+    }
+    .stChatMessage [data-testid="stMarkdownContainer"] p {
+        color: #ffffff !important;
+        font-size: 1.05rem !important;
+        line-height: 1.6 !important;
+    }
+    
+    /* User message specific */
+    div[data-testid="stChatMessage"]:has(div[data-testid="user-avatar"]) {
+        border-left: 4px solid #c5a059 !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -56,8 +72,28 @@ def start_new_chat():
 # --- UI SIDEBAR ---
 with st.sidebar:
     st.title("🤖 NeuroBot Pro")
-    st.caption("Advanced Agentic RAG System")
+    st.caption("v2.1 Cognitive Engine")
     
+    # HLD Graph Expander
+    with st.expander("🏗️ View Intelligence HLD", expanded=False):
+        st.markdown("""
+        ```mermaid
+        graph TD
+            A[User] --> B[Agentic Brain]
+            B --> C{Reflection}
+            C -->|Verified| D[Response]
+            C -->|Uncertain| E[Tools]
+            E --> B
+            subgraph Tools
+                F[FAISS PDF]
+                G[ArXiv Search]
+                H[Web Verification]
+            end
+        ```
+        """, unsafe_allow_html=True)
+        st.caption("Neural Architecture v2.1")
+    
+    st.divider()
     if st.button("➕ New Session", use_container_width=True, type="primary"):
         start_new_chat()
 
