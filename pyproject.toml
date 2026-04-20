@@ -1,0 +1,41 @@
+
+[project]
+name = "neurobot-ai"
+version = "2.0.0"
+description = "Advanced Agentic RAG Assistant with Ragas Auditing"
+readme = "PROJECT_OVERVIEW.md"
+requires-python = ">=3.10"
+dependencies = [
+    "langchain",
+    "langchain-core",
+    "langchain-community",
+    "langchain-text-splitters",
+    "langgraph",
+    "langgraph-checkpoint",
+    "langgraph-checkpoint-sqlite",
+    "langgraph-prebuilt",
+    "langchain-groq",
+    "langchain-huggingface",
+    "sentence-transformers",
+    "streamlit",
+    "faiss-cpu",
+    "pypdf",
+    "python-dotenv",
+    "requests",
+    "aiosqlite",
+    "duckduckgo-search",
+    "langchain-mcp-adapters",
+    "arxiv",
+    "ragas",
+    "pandas",
+    "datasets",
+    "pydantic",
+    "langsmith"
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest",
+    "black",
+    "isort"
+]

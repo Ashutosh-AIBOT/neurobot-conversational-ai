@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.env
+.git/
+.gitignore
+chatbot.db*
+neurobot.db*
+legacy/
+node_modules/
+venv/
+.streamlit/

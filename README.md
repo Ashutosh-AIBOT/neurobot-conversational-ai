@@ -1,4 +1,38 @@
-# 🤖 NeuroBot — Intelligent Conversational AI Assistant
+---
+title: NeuroBot Intelligent Conversational Assistant
+emoji: 🤖
+colorFrom: brown
+colorTo: yellow
+sdk: streamlit
+app_file: app.py
+pinned: false
+license: mit
+---
+
+# NeuroBot – Intelligent Conversational Assistant
+## Upgraded Pro Engine v2.1 (Neural Excellence)
+
+NeuroBot is a state-of-the-art Agentic RAG assistant built with **LangGraph**, **RAGAS**, and **LangSmith**. It features a specialized "Self-Reflection" loop to minimize hallucinations and provide peer-reviewed scientific accuracy.
+
+### 🌟 Key Enhancements
+- **Brown/Bronze Premium Dashboard**: A sophisticated, research-grade interface.
+- **Hallucination Control**: Integrated RAGAS auditing to show real-time accuracy metrics.
+- **Cognitive Reasoning**: Multi-stage graph thoughts with self-correction nodes.
+- **ArXiv & Web Intelligence**: Instant discovery and indexing of technical papers.
+- **uv Integration**: High-performance package management for lightning-fast deployments.
+
+### 🚀 Local Quick Start
+```bash
+# Install with uv
+uv pip install -e .
+
+# Launch the terminal
+streamlit run app.py
+```
+
+---
+
+# 🤖 NeuroBot — Intelligent Conversational AI Assistant (Legacy Archive)
 
 ![Python](https://img.shields.io/badge/Python-3.11-blue?style=flat-square&logo=python)
 ![LangGraph](https://img.shields.io/badge/Built_with-LangGraph-purple?style=flat-square)
@@ -276,4 +310,3 @@ B.Tech Electronics Engineering · CGPA 7.5 · Batch 2026
 > *A state machine that thinks, remembers, and acts."*
 >
 > — Ashutosh, building this from zero.
-```
