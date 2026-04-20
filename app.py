@@ -19,9 +19,23 @@ st.set_page_config(page_title="NeuroBot AI v2", page_icon="🤖", layout="wide")
 # Custom CSS for Premium Dashboard Look (Pure Black / OLED)
 st.markdown("""
     <style>
-    /* Pure Black Background */
-    .stApp { background: #000000 !important; color: #ffffff !important; }
-    .stSidebar { background-color: #0a0a0a !important; border-right: 1px solid #1f1f1f; }
+    /* Global Pure Black Background */
+    .stApp, .main, .block-container, header, .stHeader, [data-testid="stHeader"] {
+        background-color: #000000 !important;
+        color: #ffffff !important;
+    }
+    
+    /* Sidebar Pure Black */
+    [data-testid="stSidebar"], .stSidebar {
+        background-color: #050505 !important;
+        border-right: 1px solid #1f1f1f !important;
+    }
+    
+    /* Chat Input Styling */
+    [data-testid="stChatInput"] {
+        background-color: #000000 !important;
+        border-radius: 10px !important;
+    }
     
     /* Stats Dashboard Styling (Bronze/Gold accents) */
     .stats-card {
@@ -36,8 +50,8 @@ st.markdown("""
     
     /* Message bubbles - Clearly Visible */
     .stChatMessage { 
-        background: #111111 !important; 
-        border: 1px solid #222 !important; 
+        background-color: #0a0a0a !important; 
+        border: 1px solid #1a1a1a !important; 
         border-radius: 12px !important; 
         padding: 15px !important;
         margin-bottom: 20px !important;
@@ -48,7 +62,7 @@ st.markdown("""
         line-height: 1.6 !important;
     }
     
-    /* User message specific */
+    /* User message specific highlight */
     div[data-testid="stChatMessage"]:has(div[data-testid="user-avatar"]) {
         border-left: 4px solid #c5a059 !important;
     }
