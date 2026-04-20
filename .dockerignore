@@ -8,4 +8,10 @@ neurobot.db*
 legacy/
 node_modules/
 venv/
+.venv/
 .streamlit/
+*.log
+*.pdf
+chromadb/
+chroma/
+faiss_index/
