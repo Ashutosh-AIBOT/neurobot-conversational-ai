@@ -9,21 +9,18 @@ from src.neurobot_eval import run_evaluation
 
 logger = logging.getLogger("NeuroBotTools")
 
-# Tool initialization (Safe Loading)
-_ddg = None
-try:
-    _ddg = DuckDuckGoSearchRun(region="us-en")
-except Exception as e:
-    logger.error(f"Search tool critical failure: {e}")
+from duckduckgo_search import DDGS
 
 @tool
 def duckduckgo_search(query: str) -> str:
     """Search the web for general information, current events, or news."""
-    if not _ddg:
-        return "Search tool is currently unavailable."
     try:
-        return _ddg.run(query)
+        results = DDGS().text(query, max_results=3)
+        if not results:
+            return f"No results found for '{query}'."
+        return "\n\n".join([f"Source: {r['href']}\nContent: {r['body']}" for r in results])
     except Exception as e:
+        logger.error(f"Search error: {e}")
         return f"Search error: {str(e)}"
 
 @tool
