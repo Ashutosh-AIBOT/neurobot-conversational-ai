@@ -1,312 +1,164 @@
----
-title: NeuroBot Intelligent Conversational Assistant
-emoji: 🤖
-colorFrom: brown
-colorTo: yellow
-sdk: streamlit
-app_file: app.py
-pinned: false
-license: mit
----
+# NeuroBot
 
-# NeuroBot – Intelligent Conversational Assistant
-## Upgraded Pro Engine v2.1 (Neural Excellence)
+NeuroBot is a compact research assistant for technical PDFs. It combines:
+- Streamlit for a usable chat interface
+- LangGraph for multi-step orchestration
+- Groq-hosted Llama for answer generation
+- local MiniLM embeddings + FAISS for document retrieval
+- local MCP servers for tool execution
+- arXiv search and web fallback when local context is weak
 
-NeuroBot is a state-of-the-art Agentic RAG assistant built with **LangGraph**, **RAGAS**, and **LangSmith**. It features a specialized "Self-Reflection" loop to minimize hallucinations and provide peer-reviewed scientific accuracy.
+The goal of this version is simple: make the project genuinely strong and interview-safe without turning it into a bloated pseudo-enterprise codebase.
 
-### 🌟 Key Enhancements
-- **Brown/Bronze Premium Dashboard**: A sophisticated, research-grade interface.
-- **Hallucination Control**: Integrated RAGAS auditing to show real-time accuracy metrics.
-- **Cognitive Reasoning**: Multi-stage graph thoughts with self-correction nodes.
-- **ArXiv & Web Intelligence**: Instant discovery and indexing of technical papers.
-- **uv Integration**: High-performance package management for lightning-fast deployments.
+## What It Does
+- upload a PDF and chat with it
+- search arXiv for related papers
+- download an arXiv paper into the current session
+- recover with web search when document context is not enough
+- persist document indices locally so uploads survive a restart
+- optionally attach a lightweight grounded response audit
 
-### 🚀 Local Quick Start
+## Why This Repo Is Better Now
+- claims in the UI and docs are aligned with the actual implementation
+- uploaded document knowledge is persisted under `runtime/`
+- prompt and file validation are explicit
+- the graph includes a real recovery branch instead of only describing one
+- session stats in the sidebar reflect actual state
+- dependency ranges are constrained for repeatable installs
+- a small FastAPI backend is included for API-driven usage
+- a benchmark corpus is included for offline checking
+- tenant IDs namespace runtime artifacts and checkpoints
+- optional MCP server integration is available for external tool execution
+- all primary tools now call the local MCP server by default
+
+## Architecture
+```mermaid
+graph TD
+    User[User] --> UI[Streamlit UI]
+    UI --> Graph[LangGraph Workflow]
+    UI --> Ingest[PDF Ingestion]
+    Ingest --> Embed[MiniLM Embeddings]
+    Embed --> FAISS[FAISS Index on Disk]
+    Graph --> LLM[Groq Llama]
+    Graph --> Tools[PDF QA / arXiv / Web Search]
+    Tools --> FAISS
+    Tools --> External[arXiv / DuckDuckGo]
+    Graph --> Audit[Response Audit]
+    Graph --> DB[SQLite Checkpointer]
+```
+
+## Project Structure
+```text
+neurobot-conversational-ai/
+├── api/
+│   └── main.py
+├── app.py
+├── data/benchmark/mini_benchmark.jsonl
+├── docs/
+│   ├── architecture/
+│   ├── analysis/
+│   └── project/
+├── Makefile
+├── scripts/run_benchmark.py
+├── src/
+│   ├── neurobot_db.py
+│   ├── neurobot_benchmark.py
+│   ├── neurobot_eval.py
+│   ├── neurobot_graph.py
+│   ├── neurobot_logging.py
+│   ├── neurobot_mcp.py
+│   ├── neurobot_mcp_server.py
+│   ├── neurobot_tool_impl.py
+│   ├── neurobot_service.py
+│   ├── neurobot_rag.py
+│   ├── neurobot_settings.py
+│   ├── neurobot_tools.py
+│   └── neurobot_validation.py
+├── tests/
+├── requirements.txt
+└── render.yaml
+```
+
+## Quick Start
 ```bash
-# Install with uv
-uv pip install -e .
-
-# Launch the terminal
-streamlit run app.py
-```
-
----
-
-# 🤖 NeuroBot — Intelligent Conversational AI Assistant (Legacy Archive)
-
-![Python](https://img.shields.io/badge/Python-3.11-blue?style=flat-square&logo=python)
-![LangGraph](https://img.shields.io/badge/Built_with-LangGraph-purple?style=flat-square)
-![LangChain](https://img.shields.io/badge/LangChain-Framework-green?style=flat-square)
-![OpenRouter](https://img.shields.io/badge/API-OpenRouter-orange?style=flat-square)
-![Streamlit](https://img.shields.io/badge/UI-Streamlit-red?style=flat-square&logo=streamlit)
-![Status](https://img.shields.io/badge/Stage-Live-brightgreen?style=flat-square)
-
----
-
-🌐 **Live Demo:** [neurobot-intelligent-conversational-si37.onrender.com](https://neurobot-intelligent-conversational-si37.onrender.com/)
-👤 **Author:** [Ashutosh — GitHub](https://github.com/Ashutosh-AIBOT) · [LinkedIn](https://www.linkedin.com/in/ashutosh1975271/)
-💼 **Portfolio:** [ashutosh-portfolio-kappa.vercel.app](https://ashutosh-portfolio-kappa.vercel.app/)
-
----
-
-## 📋 Table of Contents
-
-- [What This Does](#-what-this-does)
-- [Live Demo](#-live-demo)
-- [Features](#-features)
-- [Architecture](#-architecture)
-- [What I Built](#-what-i-built)
-- [LangGraph State Machine](#-langgraph-state-machine)
-- [Quick Start](#-quick-start)
-- [Environment Variables](#-environment-variables)
-- [Tech Stack](#-tech-stack)
-- [Project Status](#-project-status)
-- [Links](#-links)
-- [Author](#-author)
-
----
-
-## 🧠 What This Does
-
-NeuroBot is a production-grade conversational AI assistant
-built with LangGraph state machines, OpenRouter API
-multi-model routing, and clean OOP Python architecture.
-
-1. **Problem** — Most chatbot demos are single-turn,
-   stateless, and break on multi-step conversations.
-   They have no memory and no tool-calling ability.
-2. **Solution** — LangGraph state machine manages full
-   conversation memory across turns. OpenRouter gives
-   access to multiple LLMs. Tool calling extends
-   the assistant beyond just text responses.
-3. **For** — GenAI / LLM Engineer hiring managers
-   looking for real LangGraph + agentic AI proof
-
----
-
-## 🌐 Live Demo
-
-👉 **[neurobot-intelligent-conversational-si37.onrender.com](https://neurobot-intelligent-conversational-si37.onrender.com/)**
-
-> Chat with NeuroBot directly in the browser.
-> Multi-turn memory active — it remembers the full conversation.
-
----
-
-## ✨ Features
-
-| Feature | Detail |
-|---------|--------|
-| 🧠 Multi-Turn Memory | Full conversation history via LangGraph state |
-| 🔀 Multi-Model Routing | OpenRouter API — switch between LLMs |
-| 🛠️ Tool Calling | Extend responses beyond pure text |
-| 🏗️ OOP Architecture | Clean, modular, production-ready Python code |
-| 💬 Streamlit UI | Clean chat interface with message history |
-| 🚀 Live Deployment | Hosted on Render — always available |
-
----
-
-## 🏗️ Architecture
-```
-User Message (Streamlit UI)
-        ↓
-LangGraph State Machine
-  → Maintains full conversation state
-  → Manages message history across turns
-  → Routes to appropriate node
-        ↓
-Nodes
-  → chat_node: main LLM response generation
-  → tool_node: external tool execution
-  → memory_node: state update and persistence
-        ↓
-OpenRouter API
-  → Multi-model access (GPT, Claude, Mistral, etc.)
-  → Model selection based on query type
-  → Streaming response support
-        ↓
-Tool Calling Layer
-  → Web search tool
-  → Calculator tool
-  → Custom function tools
-        ↓
-Response Streamed Back
-  → Streamlit chat message display
-  → Conversation history updated in state
-        ↓
-Deployed on Render
-  → Always-on live URL
-```
-
----
-
-## 🔨 What I Built
-
-### 1. LangGraph State Machine
-- Defined full conversation graph with typed state
-- Nodes: chat, tool execution, memory update
-- Edges: conditional routing based on response type
-- State persists full message history across all turns
-- Handles tool call detection and routing automatically
-
-### 2. OpenRouter API Integration
-- Connected to OpenRouter for multi-model LLM access
-- Supports GPT-4, Claude, Mistral, Llama via single API
-- Model can be swapped without changing core logic
-- Handles API key management and error retries
-
-### 3. Tool Calling Pipeline
-- Defined custom tools as Python functions
-- LLM decides when to call tools vs respond directly
-- Tool results injected back into conversation state
-- Supports chained tool calls in single turn
-
-### 4. OOP Architecture
-- `NeuroBot` class encapsulates full bot logic
-- `StateManager` handles LangGraph state operations
-- `ToolRegistry` manages all available tools
-- `ModelRouter` handles OpenRouter API calls
-- Clean separation of concerns — easy to extend
-
-### 5. Streamlit Chat Interface
-- Clean chat bubble UI with user and assistant styling
-- Full message history displayed in session
-- Model selector in sidebar
-- Typing indicator during response generation
-- Error handling with user-friendly messages
-
-### 6. Deployment on Render
-- Configured `render.yaml` for one-click deploy
-- Environment variables managed via Render dashboard
-- Auto-deploy on push to main branch
-- Always-on service — no cold start on free tier
-
----
-
-## 🔀 LangGraph State Machine
-```
-START
-  ↓
-[chat_node] ← Main LLM response
-  ↓
-Tool call detected?
-  ├── YES → [tool_node] → Execute tool → Back to chat_node
-  └── NO  → [memory_node] → Update state
-              ↓
-           [END] → Stream response to UI
-```
-
----
-
-## ⚡ Quick Start
-
-**Prerequisites:** Python 3.11+, Git, OpenRouter API key
-```bash
-# 1. Clone the repo
 git clone https://github.com/Ashutosh-AIBOT/neurobot-conversational-ai.git
 cd neurobot-conversational-ai
 
-# 2. Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# 3. Install dependencies
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 
-# 4. Set up environment variables
 cp .env.example .env
-# Add your OpenRouter API key to .env
-
-# 5. Run the app
-streamlit run app.py
-
-# 6. Open browser
-# http://localhost:8501
+make streamlit
 ```
 
----
+The app starts the local MCP server automatically by default, so you do not need to preconfigure an external MCP host just to run the project locally.
 
-## 🔑 Environment Variables
-
-| Variable | What It Is | Where To Get |
-|----------|-----------|-------------|
-| `OPENROUTER_API_KEY` | OpenRouter API key | [openrouter.ai](https://openrouter.ai/) |
-| `MODEL_NAME` | Default LLM model | e.g. `openai/gpt-4o` |
-| `APP_ENV` | Environment flag | `development` or `production` |
-
----
-
-## 🛠️ Tech Stack
-
-| Tool | Purpose |
-|------|---------|
-| Python 3.11 | Core language |
-| LangGraph | Conversation state machine |
-| LangChain | LLM framework and tool calling |
-| OpenRouter API | Multi-model LLM access |
-| Streamlit | Chat UI and deployment interface |
-| Render | Live hosting and deployment |
-| Git | Version control |
-
----
-
-## 📁 Repository Structure
-```
-neurobot-conversational-ai/
-│
-├── app.py                          # Main Streamlit app entry point
-│
-├── neurobot/
-│   ├── __init__.py
-│   ├── bot.py                      # Main NeuroBot class
-│   ├── state.py                    # LangGraph state definition
-│   ├── nodes.py                    # Graph nodes (chat, tool, memory)
-│   ├── tools.py                    # Tool definitions and registry
-│   └── router.py                   # OpenRouter API handler
-│
-├── .env.example                    # Environment variable template
-├── requirements.txt
-├── render.yaml                     # Render deployment config
-└── README.md
+## Common Commands
+```bash
+make install
+make streamlit
+make api
+make benchmark
+make benchmark-live
+make compile
 ```
 
----
+## Docs
+- Project overview: `docs/project/PROJECT_OVERVIEW.md`
+- System design: `docs/architecture/SYSTEM_DESIGN.md`
+- Analysis artifacts: `docs/analysis/`
 
-## 📊 Project Status
+## Environment Variables
+```bash
+GROQ_API_KEY=
+LANGCHAIN_API_KEY=
+MODEL_NAME=llama-3.3-70b-versatile
+MODEL_TEMPERATURE=0.1
+APP_ENV=development
+MAX_PDF_SIZE_MB=15
+MAX_PROMPT_CHARS=4000
+AUTO_EVAL_RESPONSES=true
+MCP_SERVERS_JSON={}
+```
 
-| Deliverable | Status |
-|-------------|--------|
-| LangGraph State Machine | ✅ Complete |
-| OpenRouter API Integration | ✅ Complete |
-| Tool Calling Pipeline | ✅ Complete |
-| OOP Architecture | ✅ Complete |
-| Streamlit Chat UI | ✅ Complete |
-| Live Deployment (Render) | ✅ Live |
-| Multi-model Switching | ✅ Complete |
-| Streaming Responses | 🔄 In Progress |
+## Optional MCP Integration
+You can enable real MCP tool execution by configuring one or more stdio MCP servers in `MCP_SERVERS_JSON`.
 
----
+Example:
+```bash
+MCP_SERVERS_JSON={
+  "filesystem": {
+    "command": "npx",
+    "args": ["-y", "@modelcontextprotocol/server-filesystem", "/absolute/path"],
+    "env": {},
+    "startup_timeout_seconds": 8,
+    "tool_timeout_seconds": 20
+  }
+}
+```
 
-## 🌐 Links
+The built-in `mcp_tool_call` tool uses:
+- `server_name` for the configured server key
+- `method` for the remote MCP tool name
+- `arguments` for the JSON payload passed to that tool
 
-| Resource | URL |
-|----------|-----|
-| 🚀 Live Demo | [neurobot-intelligent-conversational-si37.onrender.com](https://neurobot-intelligent-conversational-si37.onrender.com/) |
-| 💼 Portfolio | [ashutosh-portfolio-kappa.vercel.app](https://ashutosh-portfolio-kappa.vercel.app/) |
-| 🐙 GitHub | [github.com/Ashutosh-AIBOT](https://github.com/Ashutosh-AIBOT) |
-| 🔗 LinkedIn | [linkedin.com/in/ashutosh1975271](https://www.linkedin.com/in/ashutosh1975271/) |
+For the default local setup, the app launches `python -m src.neurobot_mcp_server` behind the scenes and calls that server for `duckduckgo_search`, `arxiv_search`, `download_and_talk_to_paper`, `pdf_qa_tool`, and `evaluate_response`.
 
----
+## Interview Talking Points
+- real LangGraph orchestration rather than a single prompt wrapper
+- retrieval persistence instead of in-memory only indexing
+- explicit trade-off between compact architecture and production scale
+- honest evaluation language: response audit, not fake guaranteed accuracy
+- MCP-backed tool execution instead of direct tool calls
+- separate API service for non-UI integration
+- multi-tenant namespacing without a large infrastructure layer
+- benchmark dataset for repeatable offline checks
+- optional MCP bridge for real external tool calls without hardcoding integrations
 
-## 👤 Author
+## Limits
+- the backend API is intentionally small rather than a full platform service
+- local persistence is good for a portfolio demo, not large-scale multi-tenant traffic
+- response audits are helpful proxies, not a benchmark-backed truth system
 
-**Ashutosh**
-B.Tech Electronics Engineering · CGPA 7.5 · Batch 2026
-[GitHub](https://github.com/Ashutosh-AIBOT) · [LinkedIn](https://www.linkedin.com/in/ashutosh1975271/) · [Portfolio](https://ashutosh-portfolio-kappa.vercel.app/)
-
----
-
-> *"Not just a chatbot.*
-> *A state machine that thinks, remembers, and acts."*
->
-> — Ashutosh, building this from zero.
+Those limits are deliberate and explainable, which is much better than overclaiming.

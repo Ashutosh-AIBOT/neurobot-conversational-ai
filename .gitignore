@@ -113,7 +113,6 @@ auth/
 # 🚀 OTHER OPTIONAL EXCLUSIONS
 # ==========================================
 # Data and temp directories
-data/
 dataset/
 datasets/
 tmp/
@@ -124,6 +123,10 @@ user_uploads/
 downloads/
 test_results/
 reports/
+
+# Runtime artifacts created by the app
+runtime/
+!runtime/.gitkeep
 
 # OS files
 Thumbs.db
