@@ -1,20 +1,27 @@
-import streamlit as st
+import time
 import uuid
-import os
-from src.neurobot_graph import neurobot_brain
-from src.neurobot_rag import ingest_pdf
-from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
+
+import streamlit as st
 from dotenv import load_dotenv
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+
+from src.neurobot_logging import setup_logging
+from src.neurobot_quality import build_quality_report, format_quality_report
+from src.neurobot_rag import clear_runtime_state, get_doc_metadata, ingest_pdf
+from src.neurobot_service import get_brain
+from src.neurobot_settings import get_settings
+from src.neurobot_validation import validate_pdf_upload, validate_user_prompt
 
 load_dotenv()
+setup_logging()
+settings = get_settings()
 
 # --- SESSION INITIALIZATION ---
 if "app_initialized" not in st.session_state:
     st.session_state.app_initialized = True
-    logger_init = True
 
 # --- CONFIG ---
-st.set_page_config(page_title="NeuroBot AI v2", page_icon="🤖", layout="wide")
+st.set_page_config(page_title="NeuroBot", page_icon="🤖", layout="wide")
 
 # Custom CSS for Premium Dashboard Look (Pure Black / OLED)
 st.markdown("""
@@ -75,21 +82,28 @@ if "conversations" not in st.session_state:
 if "current_thread_id" not in st.session_state:
     new_id = str(uuid.uuid4())
     st.session_state.current_thread_id = new_id
-    st.session_state.conversations[new_id] = {"name": "New Chat", "history": []}
+    st.session_state.conversations[new_id] = {"name": "New Chat", "history": [], "quality_report": None}
+if "tenant_id" not in st.session_state:
+    st.session_state.tenant_id = settings.default_tenant_id
 
-def start_new_chat():
+def create_chat_session():
     new_id = str(uuid.uuid4())
     st.session_state.current_thread_id = new_id
-    st.session_state.conversations[new_id] = {"name": f"Chat {len(st.session_state.conversations) + 1}", "history": []}
+    st.session_state.conversations[new_id] = {
+        "name": f"Chat {len(st.session_state.conversations) + 1}",
+        "history": [],
+        "quality_report": None,
+    }
     st.rerun()
 
 # --- UI SIDEBAR ---
 with st.sidebar:
     st.title("🤖 NeuroBot Pro")
-    st.caption("v2.1 Cognitive Engine")
+    st.caption("Document Research Assistant")
+    st.session_state.tenant_id = st.text_input("Workspace ID", value=st.session_state.tenant_id)
     
     # HLD Graph Expander
-    with st.expander("🏗️ View Intelligence HLD", expanded=False):
+    with st.expander("🏗️ Architecture Overview", expanded=False):
         st.markdown("""
         ```mermaid
         graph TD
@@ -105,11 +119,11 @@ with st.sidebar:
             end
         ```
         """, unsafe_allow_html=True)
-        st.caption("Neural Architecture v2.1")
+        st.caption("LangGraph, retrieval, and search workflow")
     
     st.divider()
     if st.button("➕ New Session", use_container_width=True, type="primary"):
-        start_new_chat()
+        create_chat_session()
 
     st.divider()
     for tid, data in st.session_state.conversations.items():
@@ -121,66 +135,110 @@ with st.sidebar:
 
     st.divider()
     if st.button("🗑️ Clear All Sessions", use_container_width=True, type="secondary"):
-        if os.path.exists("neurobot.db"):
-            try: os.remove("neurobot.db")
-            except: pass
+        clear_runtime_state()
         st.session_state.conversations = {}
         new_id = str(uuid.uuid4())
         st.session_state.current_thread_id = new_id
-        st.session_state.conversations[new_id] = {"name": "New Chat", "history": []}
+        st.session_state.conversations[new_id] = {"name": "New Chat", "history": [], "quality_report": None}
         st.rerun()
 
     st.divider()
-    st.subheader("📁 Knowledge Base")
+    st.subheader("📁 Knowledge Source")
     pdf_file = st.file_uploader("Upload PDF Paper", type="pdf")
     if pdf_file:
-        with st.status("🧠 Indexing...", expanded=False) as s:
-            res = ingest_pdf(pdf_file.getvalue(), st.session_state.current_thread_id, pdf_file.name)
-            if "error" in res: st.error(res["error"])
-            else: 
-                st.success(f"Ready: {res['filename']}")
-                s.update(label="✅ Indexing Complete", state="complete")
+        upload_validation_error = validate_pdf_upload(
+            filename=pdf_file.name,
+            file_size=pdf_file.size,
+            max_size_mb=settings.max_pdf_size_mb,
+        )
+        if upload_validation_error:
+            st.error(upload_validation_error)
+        else:
+            with st.status("Indexing document...", expanded=False) as s:
+                session_key = settings.session_namespace(st.session_state.tenant_id, st.session_state.current_thread_id)
+                res = ingest_pdf(pdf_file.getvalue(), session_key, pdf_file.name)
+                if "error" in res:
+                    st.error(res["error"])
+                    s.update(label="Indexing failed", state="error")
+                else:
+                    st.success(f"Indexed document: {res['filename']} ({res['chunks']} chunks)")
+                    s.update(label="Indexing complete", state="complete")
     
     st.divider()
-    st.subheader("📊 Session Quality")
+    st.subheader("📊 Session Overview")
+    session_key = settings.session_namespace(st.session_state.tenant_id, st.session_state.current_thread_id)
+    current_meta = get_doc_metadata(session_key)
     col1, col2 = st.columns(2)
     with col1:
-        st.metric("RAG Faith", "94%", "+2%")
+        st.metric("Open Sessions", str(len(st.session_state.conversations)))
     with col2:
-        st.metric("Hallucination ↓", "98%", "+1%")
+        st.metric("Indexed Chunks", str(current_meta.get("chunks", 0)))
+
+    current_quality = st.session_state.conversations[st.session_state.current_thread_id].get("quality_report")
+    if current_quality:
+        col3, col4 = st.columns(2)
+        with col3:
+            st.metric("Latency (ms)", f"{current_quality['latency_ms']:.0f}")
+        with col4:
+            st.metric("Source Count", str(current_quality["source_count"]))
     
-    st.info("LangSmith Tracing: Active")
-    st.caption("Evaluation: Ragas / Hallucination Control: Optimized")
+    if current_meta:
+        st.caption(
+            f"Current document: {current_meta.get('filename', 'N/A')} | "
+            f"Pages: {current_meta.get('pages', 0)}"
+        )
+
+    tracing_status = "enabled" if settings.langchain_api_key else "disabled"
+    st.info(
+        f"Model: {settings.model_name}\n\n"
+        f"Tracing: {tracing_status}\n\n"
+        f"Auto-evaluation: {'on' if settings.auto_eval_responses else 'off'}"
+    )
+    st.caption("Metrics appear only when they are computed from the active session.")
 
 # --- MAIN CHAT ---
-current_chat = st.session_state.conversations[st.session_state.current_thread_id]
-st.title(f"{current_chat['name']}")
-st.info("Agent: CRAG Enabled | Engine: Llama-3.3-70B | Evaluation: Ragas")
+active_chat = st.session_state.conversations[st.session_state.current_thread_id]
+st.title(f"{active_chat['name']}")
+st.info("Assistant mode: retrieval, search recovery, and response audit when grounded context is available")
 
 # Display history
-for msg in current_chat["history"]:
+for msg in active_chat["history"]:
     role = "user" if isinstance(msg, HumanMessage) else "assistant"
     with st.chat_message(role):
-        # Special rendering for Ragas dashboard
-        if "### 📊 Groq Accuracy Dashboard" in msg.content:
+        if "### Response Audit" in msg.content or "### Quality Report" in msg.content:
             st.markdown(f'<div class="stats-card">{msg.content}</div>', unsafe_allow_html=True)
         else:
             st.markdown(msg.content)
 
 # User input
-if prompt := st.chat_input("Ask about a paper or search ArXiv..."):
-    current_chat["history"].append(HumanMessage(content=prompt))
-    if current_chat["name"] == "New Chat": current_chat["name"] = prompt[:25] + "..."
+if prompt := st.chat_input("Ask about a document, arXiv topic, or web topic..."):
+    prompt_validation_error = validate_user_prompt(prompt, max_chars=settings.max_prompt_chars)
+    if prompt_validation_error:
+        st.error(prompt_validation_error)
+        st.stop()
+
+    active_chat["history"].append(HumanMessage(content=prompt))
+    if active_chat["name"] == "New Chat": active_chat["name"] = prompt[:25] + "..."
     
     with st.chat_message("user"): st.markdown(prompt)
 
     with st.chat_message("assistant"):
         response_text = ""
         placeholder = st.empty()
+        tool_events = []
+        started = time.perf_counter()
         
         try:
-            config = {"configurable": {"thread_id": st.session_state.current_thread_id}}
-            for chunk in neurobot_brain.stream({"messages": current_chat["history"]}, config=config, stream_mode="messages"):
+            brain = get_brain(st.session_state.tenant_id)
+            config = {
+                "configurable": {
+                    "thread_id": settings.session_namespace(
+                        st.session_state.tenant_id,
+                        st.session_state.current_thread_id,
+                    )
+                }
+            }
+            for chunk in brain.stream({"messages": active_chat["history"]}, config=config, stream_mode="messages"):
                 msg = chunk[0] if isinstance(chunk, tuple) else chunk
                 
                 if isinstance(msg, AIMessage) and msg.content:
@@ -188,15 +246,25 @@ if prompt := st.chat_input("Ask about a paper or search ArXiv..."):
                     placeholder.markdown(response_text + "▌")
                 
                 if isinstance(msg, ToolMessage):
-                    with st.expander(f"🛠️ Agent Action: {msg.name}"):
-                        # Highlight statistical outputs
-                        if "Dashboard" in msg.content:
-                            st.info("Running Ragas Evaluation...")
+                    tool_events.append(msg)
+                    with st.expander(f"Tool activity: {msg.name}"):
+                        if "Response Audit" in msg.content:
+                            st.info("Running grounded response audit...")
                         st.write(msg.content)
                         
         except Exception as e:
-            st.error(f"Brain Error: {e}")
+            st.error(f"Assistant error: {e}")
             response_text = "I hit a snag. Please check your connection."
 
         placeholder.markdown(response_text)
-        current_chat["history"].append(AIMessage(content=response_text))
+        active_chat["history"].append(AIMessage(content=response_text))
+        quality_report = build_quality_report(
+            answer_text=response_text,
+            tool_events=tool_events,
+            latency_ms=(time.perf_counter() - started) * 1000,
+            indexed_chunks=int(current_meta.get("chunks", 0)),
+        )
+        active_chat["quality_report"] = quality_report
+        quality_markdown = format_quality_report(quality_report)
+        active_chat["history"].append(AIMessage(content=quality_markdown))
+        st.markdown(f'<div class="stats-card">{quality_markdown}</div>', unsafe_allow_html=True)
